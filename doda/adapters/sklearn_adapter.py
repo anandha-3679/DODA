@@ -26,6 +26,13 @@ class SklearnAdapter(BaseOperatorAdapter):
 
         feature_names = list(X.columns)
 
+        print("DODA feature order:")
+        print(feature_names[:10])
+
+        print("Number of features:", len(feature_names))
+
+        print("Number of scores:", len(self.estimator.scores_))
+
 
         # -----------------------------
         # SelectKBest
