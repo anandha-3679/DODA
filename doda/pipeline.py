@@ -1,5 +1,6 @@
 from .utils.validation import validate_input
 from .utils.preprocessing import preprocess_data
+from .utils.normalization import normalize_scores
 
 from .knowledge.engine import KnowledgeEngine
 from .fusion.hadamard import HadamardFusion
@@ -63,11 +64,23 @@ class DODAPipeline:
         # Step 2 : Aggregate Math Scores
         # ---------------------------------
 
-        math_scores = self.resolve_scores(
+        raw_math_scores = self.resolve_scores(
             operator_scores
         )
 
-        print("\nMathematical Scores")
+        print("\nRaw Mathematical Scores")
+        print(raw_math_scores)
+
+
+        # ---------------------------------
+        # Normalize Mathematical Scores
+        # ---------------------------------
+
+        math_scores = normalize_scores(
+            raw_math_scores
+        )
+
+        print("\nNormalized Mathematical Scores")
         print(math_scores)
 
 
@@ -134,6 +147,8 @@ class DODAPipeline:
         # ---------------------------------
 
         return {
+
+            "raw_math_scores": raw_math_scores,
 
             "math_scores": math_scores,
 

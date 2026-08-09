@@ -72,6 +72,10 @@ class DODASelector(
 
         # Store final scores
 
+        self.raw_math_scores_ = (
+            results["raw_math_scores"]
+        )
+
         self.math_scores_ = (
             results["math_scores"]
         )
@@ -254,7 +258,7 @@ class DODASelector(
                 math_rank[feature],
 
 
-                "Math Score":
+                "Normalized Math Score":
 
                 round(
                     self.math_scores_.get(
