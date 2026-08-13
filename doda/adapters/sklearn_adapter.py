@@ -65,12 +65,13 @@ class SklearnAdapter(BaseOperatorAdapter):
 
         elif hasattr(self.estimator, "coef_"):
 
-            coef = self.estimator.coef_
+            scores = np.abs(
+                self.estimator.coef_
+            )
 
-            if coef.ndim > 1:
-                coef = coef[0]
-
-            values = np.abs(coef)
+            # Binary classification
+            if scores.ndim > 1:
+                scores = scores[0]
 
 
         # -----------------------------
