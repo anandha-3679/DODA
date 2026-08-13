@@ -31,17 +31,20 @@ class SklearnAdapter(BaseOperatorAdapter):
 
         print("Number of features:", len(feature_names))
 
-        print("Number of scores:", len(self.estimator.scores_))
-
 
         # -----------------------------
-        # SelectKBest
+        # SelectKBest / ANOVA
         # -----------------------------
 
         if hasattr(self.estimator, "scores_"):
 
             values = np.nan_to_num(
                 self.estimator.scores_
+            )
+
+            print(
+                "Number of scores:",
+                len(values)
             )
 
 
@@ -58,20 +61,34 @@ class SklearnAdapter(BaseOperatorAdapter):
                 self.estimator.feature_importances_
             )
 
+            print(
+                "Number of feature importances:",
+                len(values)
+            )
+
 
         # -----------------------------
-        # Linear models
+        # Linear models / LASSO
         # -----------------------------
 
         elif hasattr(self.estimator, "coef_"):
 
-            scores = np.abs(
+            values = np.abs(
                 self.estimator.coef_
             )
 
             # Binary classification
-            if scores.ndim > 1:
-                scores = scores[0]
+            if values.ndim > 1:
+                values = values[0]
+
+            values = np.nan_to_num(
+                values
+            )
+
+            print(
+                "Number of coefficients:",
+                len(values)
+            )
 
 
         # -----------------------------
@@ -87,6 +104,11 @@ class SklearnAdapter(BaseOperatorAdapter):
 
             values = 1.0 / ranking
 
+            print(
+                "Number of rankings:",
+                len(values)
+            )
+
 
         # -----------------------------
         # VarianceThreshold
@@ -98,6 +120,15 @@ class SklearnAdapter(BaseOperatorAdapter):
                 self.estimator.variances_
             )
 
+            print(
+                "Number of variances:",
+                len(values)
+            )
+
+
+        # -----------------------------
+        # Unsupported estimator
+        # -----------------------------
 
         else:
 
@@ -112,8 +143,36 @@ class SklearnAdapter(BaseOperatorAdapter):
             )
 
 
-        values = values.astype(float)
+        # -----------------------------
+        # Convert to float
+        # -----------------------------
 
+        values = np.asarray(
+            values,
+            dtype=float
+        )
+
+
+        # -----------------------------
+        # Validate dimensions
+        # -----------------------------
+
+        if len(values) != len(feature_names):
+
+            raise ValueError(
+
+                "Number of feature importance values "
+
+                f"({len(values)}) does not match "
+
+                f"number of features ({len(feature_names)})."
+
+            )
+
+
+        # -----------------------------
+        # Store importance
+        # -----------------------------
 
         self.importance = dict(
 
