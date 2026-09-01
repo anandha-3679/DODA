@@ -189,19 +189,29 @@ class DODASelector(
     def compare_scores(self):
 
         """
-        Compare mathematical ranking vs
-        clinically fused DODA ranking.
+        Compare mathematical ranking, clinical ranking,
+        and the final fusion-based ranking.
+
+        Works with different fusion strategies such as:
+        - HadamardFusion
+        - RankFusion
         """
 
         import pandas as pd
 
+
+        # =============================================================
+        # Feature list
+        # =============================================================
 
         features = list(
             self.final_scores_.keys()
         )
 
 
+        # =============================================================
         # Mathematical ranking
+        # =============================================================
 
         math_ranked = sorted(
             self.math_scores_.items(),
@@ -220,7 +230,30 @@ class DODASelector(
         }
 
 
-        # Final DODA ranking
+        # =============================================================
+        # Clinical ranking
+        # =============================================================
+
+        clinical_ranked = sorted(
+            self.clinical_weights_.items(),
+            key=lambda x: x[1],
+            reverse=True
+        )
+
+
+        clinical_rank = {
+
+            feature: idx + 1
+
+            for idx, (feature, score)
+            in enumerate(clinical_ranked)
+
+        }
+
+
+        # =============================================================
+        # Final fusion ranking
+        # =============================================================
 
         final_ranked = sorted(
             self.final_scores_.items(),
@@ -239,12 +272,27 @@ class DODASelector(
         }
 
 
+        # =============================================================
+        # Identify fusion method
+        # =============================================================
+
+        if self.fusion is not None:
+
+            fusion_name = self.fusion.__class__.__name__
+
+        else:
+
+            fusion_name = "None"
+
+
+        # =============================================================
+        # Create comparison table
+        # =============================================================
 
         rows = []
 
 
         for feature in features:
-
 
             rows.append({
 
@@ -253,9 +301,16 @@ class DODASelector(
                 feature,
 
 
+                # -------------------------------------------------
+                # Mathematical information
+                # -------------------------------------------------
+
                 "Math Rank":
 
-                math_rank[feature],
+                math_rank.get(
+                    feature,
+                    None
+                ),
 
 
                 "Normalized Math Score":
@@ -266,6 +321,18 @@ class DODASelector(
                         0
                     ),
                     4
+                ),
+
+
+                # -------------------------------------------------
+                # Clinical information
+                # -------------------------------------------------
+
+                "Clinical Rank":
+
+                clinical_rank.get(
+                    feature,
+                    None
                 ),
 
 
@@ -280,9 +347,16 @@ class DODASelector(
                 ),
 
 
-                "DODA Rank":
+                # -------------------------------------------------
+                # Final fusion information
+                # -------------------------------------------------
 
-                final_rank[feature],
+                "Final Rank":
+
+                final_rank.get(
+                    feature,
+                    None
+                ),
 
 
                 "Final Score":
@@ -296,24 +370,42 @@ class DODASelector(
                 ),
 
 
+                # -------------------------------------------------
+                # Rank movement
+                # -------------------------------------------------
+
                 "Rank Change":
 
-                math_rank[feature]
+                math_rank.get(
+                    feature,
+                    0
+                )
                 -
-                final_rank[feature]
+                final_rank.get(
+                    feature,
+                    0
+                )
 
             })
 
 
+        # =============================================================
+        # DataFrame
+        # =============================================================
+
         df = pd.DataFrame(rows)
 
 
-        return (
+        # =============================================================
+        # Sort by final ranking
+        # =============================================================
+
+        df = (
 
             df
 
             .sort_values(
-                by="DODA Rank"
+                by="Final Rank"
             )
 
             .reset_index(
@@ -321,5 +413,47 @@ class DODASelector(
             )
 
         )
+
+
+        # =============================================================
+        # Print summary
+        # =============================================================
+
+        print("\n" + "=" * 70)
+
+        print(
+            f"MATHEMATICAL vs CLINICAL vs "
+            f"{fusion_name.upper()}"
+        )
+
+        print("=" * 70)
+
+
+        print(
+            f"\nFusion Method: {fusion_name}"
+        )
+
+
+        print(
+            "\nTop Features After Fusion:"
+        )
+
+
+        print(
+            df[
+                [
+                    "Feature",
+                    "Math Rank",
+                    "Clinical Rank",
+                    "Final Rank",
+                    "Rank Change"
+                ]
+            ].head(
+                self.top_k
+            )
+        )
+
+
+        return df
 
                 
