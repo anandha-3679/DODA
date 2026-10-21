@@ -1,4 +1,4 @@
-# DODA — Domain-Oriented Dynamic Architecture
+# DODA — Decoupled-Operator Driven Architecture
 
 **A configurable framework for integrating domain knowledge into machine-learning feature selection.**
 
